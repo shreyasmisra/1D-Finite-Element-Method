@@ -10,7 +10,6 @@ class FluidFlow:
         self.n_nodes = n_elements+1
         self.L = self.l[0]*self.n_elements
 
-    
     def find_stiffness_matrix(self):
         '''
         Calculates the Global stiffness matrix based on Minimum Potential Energy Principle. 
@@ -28,7 +27,7 @@ class FluidFlow:
             else:
                 self.K[i,i] = abs(self.K[i,i-1]) + stiffness(self.l[i],A[i])
     
-    def internal_sinks(self,Q,A,l):
+    def internal_sinks_sources(self,Q,A,l):
         ''' 
         Calculates the flow rates from internal sources and sinks. For example Pumps
         '''
@@ -47,7 +46,7 @@ class FluidFlow:
         self.Q_force = zeros(self.n_nodes)
         for i in range(self.n_elements):
             Q0 = self.surface_flow(q,t,self.l[i])
-            Q1 = self.internal_sinks(Q,self.A[i],self.l[i])
+            Q1 = self.internal_sinks_sources(Q,self.A[i],self.l[i])
             self.Q_force[i] += Q0[0]+Q1[0]
             self.Q_force[i+1] += Q0[1]+Q1[1]
             
