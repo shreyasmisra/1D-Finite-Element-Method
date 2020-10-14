@@ -17,8 +17,8 @@ class FluidFlow:
         K is the global stiffness matrix of shape - number of nodes x number of nodes. Assuming 1 DoF at each node
         '''
         def stiffness(l,A):
-                return (self.K_p*A)/l # array([[1,-1],[-1,1]])
-        self.K = zeros((self.n_nodes,self.n_nodes))
+                return (self.K_p*A)/l # array([[1,-1],[-1,1]]). Element stiffness matrix as given by Minimum Potential Energy Method
+        self.K = zeros((self.n_nodes,self.n_nodes)) # Global stiffness matrix
         for i in range(self.n_elements):
             self.K[i,i+1] = -1*stiffness(self.l[i],A[i])
             self.K[i+1,i] = -1*stiffness(self.l[i],A[i])
@@ -27,6 +27,7 @@ class FluidFlow:
                 self.K[-1,-1] = stiffness(self.l[i],A[-1])
             else:
                 self.K[i,i] = abs(self.K[i,i-1]) + stiffness(self.l[i],A[i])
+    
     
     def internal_sinks(self,Q,A,l):
         ''' 
@@ -57,9 +58,10 @@ class FluidFlow:
         Applies the Head Boundary condition at the nodes where Head is specified. Usually the inlet and outlet nodes
         '''
         self.H = ones(self.n_nodes)
-        self.H.fill(-99999)
-        self.H[0] = value[0]
-        self.H[-1] = value[-1]
+        self.H.fill(-99999) # random value -99999 indicates the unknown values
+        self.H[0] = value[0] # First value specified is for Inlet
+        self.H[-1] = value[-1] # For outlet
+    
     
     def solve_mat(self,F,k):
         return linalg.solve(k,F) # matrix solver
@@ -70,7 +72,6 @@ class FluidFlow:
         For more information refer - http://web.iitd.ac.in/~hegde/fem/lecture/lecture9.pdf 
         '''
         C = abs(amax(self.K))*10**4
-        # self.K[ind,ind] += C
         k_copy = self.K.copy()
         for i in range(self.n_nodes):
             if self.H[i]!=-99999:
@@ -93,6 +94,8 @@ class FluidFlow:
                 new_f[i-1] = self.Q_force[i] - dot(self.K[i,ind2],self.H[ind2])[0]
         self.e_sol = self.solve_mat(new_f,new_k)
         self.H[ind1] = self.e_sol
+        
+        
     def velocity_distribution(self):
         ''' 
         Calculates the Velocity profile for all elements
@@ -101,6 +104,7 @@ class FluidFlow:
         for i in range(self.n_elements):
             self.velocity[i] = -self.K_p *(self.H[i+1]-self.H[i])/self.l[i]
     
+    
     def flow_rate(self):
         ''' 
         Flow rate calculation
@@ -108,7 +112,8 @@ class FluidFlow:
         self.flow = zeros(self.n_elements)
         for i in range(self.velocity.shape[0]):
             self.flow[i] = self.velocity[i]*self.A[i]
-            
+      
+    
     def solve(self, method):
         if method =='elimination':
             self.elimination()
@@ -121,12 +126,14 @@ class FluidFlow:
         else:
             print("Error: No method of type ",method," found")
     
+    
     def print_func(self):
         print("Total Flow -- ",self.Q_force)
         print("Heads -- ", self.H)
         print("Global element stiffness -- \n",self.K)
         print("Velocity distribution -- ", self.velocity)
         print("FLow Rate -- ", self.flow)
+        
         
     def visualize(self):
         ''' 
@@ -145,9 +152,10 @@ if __name__=="__main__":
     #########################################
     ####### Fluid domain ##############
     n_elements = 15 # number of elements to discretize domain
-    K_p = 1 # Permeability coefficient
+    K_p = 1 # Permeability coefficient. Based on viscosity of the fluid. Unit - cm/s
     A = array([3,2,2,3,3,2,1,5,4,6,6,1,2,6,2]) # Area of each of the element
-    L = [1]*n_elements # length of each element
+    L = [1]*n_elements # length of each element. Can also be different. Specify similar to Area array
+    solution_method = 'elimination'
     #######################################
     ####### Sources/Sinks and Surface flows ################
     Q = 200 # sources/sinks
@@ -161,7 +169,7 @@ if __name__=="__main__":
     fluid.find_stiffness_matrix()
     fluid.total_flow(Q, q, t)
     fluid.boundary_conditions(H)
-    fluid.solve('elimination')
+    fluid.solve(solution_method)
     fluid.print_func()
     fluid.visualize()
 
