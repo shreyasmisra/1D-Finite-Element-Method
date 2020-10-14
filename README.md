@@ -7,4 +7,4 @@ Programs included are - <br/>
 4) Structural beam element analysis to find the slope and displacement at the nodes. Force can be due to uniformly distributed or varied load, point load and moment. Boundary conditions include hinged, roller and fixed at the ends of the beam. The results are the displcements and slopes of the beam at each node along with the stresses. <br/>
 The matrices are solved based on two different methods - Elimination and Penalty methods.<br/>
 
-2D coming soon!
+
