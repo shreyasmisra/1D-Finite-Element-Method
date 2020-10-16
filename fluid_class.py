@@ -20,13 +20,13 @@ class FluidFlow:
                 return (self.K_p*A)/l # array([[1,-1],[-1,1]]). Element stiffness matrix as given by Minimum Potential Energy Method
         self.K = zeros((self.n_nodes,self.n_nodes)) # Global stiffness matrix
         for i in range(self.n_elements):
-            self.K[i,i+1] = -1*stiffness(self.l[i],A[i])
-            self.K[i+1,i] = -1*stiffness(self.l[i],A[i])
+            self.K[i,i+1] = -1*stiffness(self.l[i],self.A[i])
+            self.K[i+1,i] = -1*stiffness(self.l[i],self.A[i])
             if i == 0:
-                self.K[0,0] = stiffness(self.l[i],A[0])
-                self.K[-1,-1] = stiffness(self.l[i],A[-1])
+                self.K[0,0] = stiffness(self.l[0],self.A[0])
+                self.K[-1,-1] = stiffness(self.l[-1],self.A[-1])
             else:
-                self.K[i,i] = abs(self.K[i,i-1]) + stiffness(self.l[i],A[i])
+                self.K[i,i] = abs(self.K[i,i-1]) + stiffness(self.l[i],self.A[i])
     
     
     def internal_sinks(self,Q,A,l):
@@ -78,7 +78,7 @@ class FluidFlow:
                 k_copy[i,i] += C
                 self.Q_force[i] += C*self.H[i]
         self.p_sol = self.solve_mat(self.Q_force,k_copy)
-        self.H = self.p_sol 
+        self.H = self.p_sol # Final solution fo pressure head along the flow path
     
     def elimination(self):
         ''' 
@@ -93,7 +93,7 @@ class FluidFlow:
             if i in ind1[0]:
                 new_f[i-1] = self.Q_force[i] - dot(self.K[i,ind2],self.H[ind2])[0]
         self.e_sol = self.solve_mat(new_f,new_k)
-        self.H[ind1] = self.e_sol
+        self.H[ind1] = self.e_sol # final solution using elimination method
         
         
     def velocity_distribution(self):
@@ -149,7 +149,6 @@ class FluidFlow:
 
 #### SAMPLE PROGRAM UTILIZATION ########################
 if __name__=="__main__":  
-    #########################################
     ####### Fluid domain ##############
     n_elements = 15 # number of elements to discretize domain
     K_p = 1 # Permeability coefficient. Based on viscosity of the fluid. Unit - cm/s
