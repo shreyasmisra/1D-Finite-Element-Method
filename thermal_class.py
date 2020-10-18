@@ -50,8 +50,6 @@ class Thermal1D:
                 self.K[-1,-1] = stiffness_conduction(self.A[-1], self.l[-1])[-1,-1]+stiffness_convection(self.l[-1], self.P[-1])[-1,-1]
                 if convection_free_end == 'left':
                     self.K[0,0] += stiffness_convection_left(self.A[0])[0,0]
-                    # if convection_free_end == 'left':
-                    #     self.K[-1,-1] += stiffness_convection_left(self.A[-1])
                 elif convection_free_end == 'right':
                     self.K[-1,-1] += stiffness_convection_right(self.A[-1])[-1,-1]
                 else:
@@ -101,17 +99,24 @@ class Thermal1D:
             
             self.F +=fn
                 
-    def end_boundary_conditions(self,value): # from higher to lower
+    def end_boundary_conditions(self,value,end_convection=False,insulated=False): # from higher to lower
         ''' 
         Applies the Temperature Boundary condition at the end nodes where Temperature is specified. Usually the inlet and outlet nodes
         '''
         self.T = ones(self.n_nodes)
         self.T.fill(-99999)
-        if type(value)==int:
+        if end_convection == False:
+            if insulated =='right':
+                self.T[0] = value
+            elif insulated == 'left':
+                self.T[-1] = value
+            else:
+                self.T[0] = value[0]
+                self.T[-1] = value[-1]
+        elif end_convection =='right':
             self.T[0] = value
         else:
-            self.T[0] = value[0]
-            self.T[-1] = value[-1]
+            self.T[-1] = value
             
     def solve_mat(self,F,k):
         return linalg.solve(k,F)
@@ -122,7 +127,6 @@ class Thermal1D:
         For more information refer - http://web.iitd.ac.in/~hegde/fem/lecture/lecture9.pdf 
         '''
         C = abs(amax(self.K))*10**4
-        # self.K[ind,ind] += C
         k_copy = self.K.copy()
         f_copy = self.F.copy()
         for i in range(self.n_nodes):
@@ -136,8 +140,8 @@ class Thermal1D:
         ''' 
         Elimination method to solve the matrix without using inverse. Genereally can work on smaller problems with fewer nodes
         '''
-        ind1 = where(self.T==-99999) # indices where we have to find the new values
-        ind2 = where(self.T!=-99999)# indices where the boundary conditions are known
+        ind1 = where(self.T==-99999)        # indices where we have to find the new values
+        ind2 = where(self.T!=-99999)        # indices where the boundary conditions are known
         new_k = delete(self.K,ind2,0)
         new_k = delete(new_k,ind2,1)
         new_f = zeros(len(ind1[0]))
@@ -188,59 +192,34 @@ class Thermal1D:
 if __name__ =="__main__":                
     ###################################################
     ####### Model characteristics #####################
-    n_elements = 10
-    thermal_conductivity = 100
-    element_length = [0.075]*n_elements
-    element_area = [1]*n_elements
-    heat_transfer_coefficient = 250 
-    d = 0.5 
-    T_infinity = 25
+    # Enter all values in same units. All values are used in SI units here as an example.
+    n_elements = 3
+    thermal_conductivity = 100 # W/mK
+    element_length = [0.075,0.05,0.025] # m. 
+    element_area = [1]*n_elements # m2. If different areas, specify similar to that of length.
+    heat_transfer_coefficient = 250 # W/m2K
+    d = 0.5 # m. If different diameters, specify similar to that of length.
+    T_infinity = 25 # deg C
+    method = 'penalty' # or elimination
     ##################################################
     ####### Forces ##################################
-    heat_source = 500
-    wall_flux = 100
+    heat_source = 500 # W/m2
+    wall_flux = 100 # W/m2
     end_convection = 'right' # inputs - 'right' or 'left'
     ###########################################
     ####### Boundary Conditions ###############
-    T = 1000
+    T = 1000    # Enter a single value. If no insulation, provide values as (value1,value2). In this example, as convective end is right, the temperature will be specified for left boundary.
+    insulated = False  # Can take values - 'right' or 'left'. The temperature will be specified on the non-insulated non-convective side.
+                       # if no insulation: either provide a convective value and a temperature or two temperatures at the boundaries.
     
     thermal = Thermal1D(thermal_conductivity,element_length,n_elements,heat_transfer_coefficient,Dia=d)
     thermal.global_stiffness(end_convection)
     thermal.total_heat_force(heat_source,wall_flux,T_infinity)
-    thermal.end_boundary_conditions(T)
-    thermal.solve('penalty')
+    thermal.end_boundary_conditions(T,end_convection,insulated)
+    thermal.solve(method)
     thermal.print_func()
     thermal.visualize()               
                 
                 
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
+                 
                     
