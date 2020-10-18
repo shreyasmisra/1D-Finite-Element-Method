@@ -15,7 +15,8 @@ class Structural1D:
         K is the global stiffness matrix of shape - number of nodes x number of nodes. Assuming 1 DoF at each node
         '''
         def stiffness(l,A,E):
-                return (E*A)/l # array([[1,-1],[-1,1]])
+                return (E*A)/l
+            
         self.K = zeros((self.n_nodes,self.n_nodes))
         for i in range(self.n_elements):
             self.K[i,i+1] = -1*stiffness(self.l[i],self.A[i],self.E[i])
@@ -31,7 +32,7 @@ class Structural1D:
         for i in range(len(ele)):
             self.F[ele[i]-1] = f[i]
     
-    def boundary_conditions(self,fixed,specified_dispalcement=False): # from higher to lower
+    def boundary_conditions(self,fixed,specified_dispalcement=False): 
         ''' 
         Applies displacement boundary conditions. Returns a displacement matrix with unknown locations as -99999. size - (number of nodes x 1)
         '''
@@ -110,29 +111,29 @@ class Structural1D:
         print("strains -- ", self.strains)
         print("Stresses -- ", self.stresses)
         
-        
-#################################
-######## Characteristics ########
-E = (10**9)*array([200.0,74.0,68.0])
-A = (10**-2)*array([1,0.75,0.5])
-l = array([1,0.75,0.5])
-n_elements = 3
-method = 'elimination'
-#################################
-########### Forces ##############
-F = array([2000])
-F_position = array([4]) # The node at which the Force is acting
-#################################
-#### Boundary conditions ########
-fixed_pos = 1
-node_with_displacement = False
+if __name__ =="__main__":        
+    #################################
+    ######## Characteristics ########
+    E = (10**9)*array([200.0,74.0,68.0])
+    A = (10**-2)*array([1,0.75,0.5])
+    l = array([1,0.75,0.5])
+    n_elements = 3
+    method = 'elimination'
+    #################################
+    ########### Forces ##############
+    F = array([2000,1000])
+    F_position = array([4,2]) # The node at which the Force is acting
+    #################################
+    #### Boundary conditions ########
+    fixed_pos = 1
+    node_with_displacement = False # node_with_displacement is an array - [value of displacement,position]
 
-bar = Structural1D(E,A,l,n_elements)
-bar.find_stiffness_matrix()
-bar.Force(F,F_position)    
-bar.boundary_conditions(fixed_pos,node_with_displacement)
-bar.solve(method)
-bar.print_func()
+    bar = Structural1D(E,A,l,n_elements)
+    bar.find_stiffness_matrix()
+    bar.Force(F,F_position)    
+    bar.boundary_conditions(fixed_pos,node_with_displacement)
+    bar.solve(method)
+    bar.print_func()
         
         
         
