@@ -2,13 +2,14 @@ from numpy import *
 import matplotlib.pyplot as plt
 
 class FluidFlow:
-    def __init__(self,K_p,A,l,n_elements):
+    def __init__(self,K_p,A,l,n_elements,visualization):
         self.K_p = K_p
         self.l = l
         self.A = A
         self.n_elements = n_elements
         self.n_nodes = n_elements+1
         self.L = self.l[0]*self.n_elements
+        self.visualization = visualization
 
     
     def find_stiffness_matrix(self):
@@ -119,13 +120,16 @@ class FluidFlow:
             self.elimination()
             self.velocity_distribution()
             self.flow_rate()
+            if self.visualization:
+                self.visualize()
         elif method=='penalty':
             self.penalty_method()
             self.velocity_distribution()
             self.flow_rate()
+            if self.visualization:
+                self.visualize()
         else:
             print("Error: No method of type ",method," found")
-    
     
     def print_func(self):
         print("Total Flow -- ",self.Q_force)
@@ -155,6 +159,7 @@ if __name__=="__main__":
     A = array([3,2,2,3,3,2,1,5,4,6,6,1,2,6,2]) # Area of each of the element
     L = [1]*n_elements # length of each element. Can also be different. Specify similar to Area array
     solution_method = 'elimination'
+    visualize = False
     #######################################
     ####### Sources/Sinks and Surface flows ################
     Q = 200 # sources/sinks
@@ -164,13 +169,12 @@ if __name__=="__main__":
     #### Boundary Conditions #############
     H = (50,-4) # Heads at the ends
     
-    fluid = FluidFlow(K_p,A,L,n_elements)
+    fluid = FluidFlow(K_p,A,L,n_elements,visualize)
     fluid.find_stiffness_matrix()
     fluid.total_flow(Q, q, t)
     fluid.boundary_conditions(H)
     fluid.solve(solution_method)
     fluid.print_func()
-    fluid.visualize()
 
 
 
