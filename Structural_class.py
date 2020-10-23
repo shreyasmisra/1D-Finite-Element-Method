@@ -115,8 +115,7 @@ class Structural1D:
                 self.stresses[i] = self.strains[i]*self.E[i]
             else:
                 self.strains[i] = (self.Q[i+1]-self.Q[i])/self.l[i]
-                self.stresses[i] = self.strains[i]*self.E[i]
-    
+                self.stresses[i] = self.strains[i]*self.E[i] 
     
     def solve(self, method):
         if method =='elimination':
@@ -132,7 +131,7 @@ class Structural1D:
     
     def print_func(self):
         print("Total Force -- ",self.F)
-        print("Displacemnt -- ", self.Q)
+        print("Displacement -- ", self.Q)
         print("Global element stiffness -- \n",self.K)
         print("strains -- ", self.strains)
         print("Stresses -- ", self.stresses)
