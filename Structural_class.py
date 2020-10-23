@@ -1,13 +1,14 @@
 from numpy import *
 
 class Structural1D:
-    def __init__(self,E,A,l,n_elements):
+    def __init__(self,E,A,l,n_elements,temperature_effect = False):
         self.E = E
         self.l = l
         self.A = A
         self.n_elements = n_elements
         self.n_nodes = n_elements+1
         self.L = self.l[0]*self.n_elements
+        self.temperature_effect = temperature_effect
 
     def find_stiffness_matrix(self):
         '''
@@ -28,18 +29,36 @@ class Structural1D:
                 self.K[i,i] = abs(self.K[i,i-1]) + stiffness(self.l[i],self.A[i],self.E[i])
     
     def Force(self,f,ele):
+        '''
+        Defines the forces acting on the nodes. 
+        '''
         self.F=zeros(self.n_nodes)
         for i in range(len(ele)):
             self.F[ele[i]-1] = f[i]
     
-    def boundary_conditions(self,fixed,specified_dispalcement=False): 
+    def temp_effects(self,alpha,delta_T):
+        '''
+        Calculates the force due to temperature change of the environment. Uses thermal coefficient of expansion and change in temperature.
+        '''
+        def element_temp_force(a,delta_T,E,A):
+            return E*A*a*delta_T*array([-1,1])
+        
+        self.alpha = alpha
+        self.delta_T = delta_T
+        self.temp_force = zeros(self.n_nodes)
+        for i in range(self.n_elements):
+            self.temp_force[i] += element_temp_force(self.alpha[i],self.delta_T,self.E[i],self.A[i])[0]
+            self.temp_force[i+1] += element_temp_force(self.alpha[i],self.delta_T,self.E[i],self.A[i])[1]
+        self.F += self.temp_force
+    
+    def boundary_conditions(self,fixed,specified_displacement=False): 
         ''' 
-        Applies displacement boundary conditions. Returns a displacement matrix with unknown locations as -99999. size - (number of nodes x 1)
+        Applies displacement boundary conditions. Returns a displacement matrix with unknown locations as -99999. Size - (number of nodes x 1)
         '''
         self.Q = ones(self.n_nodes)
         self.Q.fill(-99999)
-        if specified_dispalcement:
-            self.Q[specified_dispalcement[1]-1] = specified_dispalcement[0] # specified_displacement is an array - [value of displacement,position]
+        if specified_displacement is not False:
+            self.Q[int(specified_displacement[1])-1] = specified_displacement[0] # specified_displacement is an array - [value of displacement,position]
         if type(fixed)==int:
             self.Q[fixed-1] = 0
         else:
@@ -85,11 +104,18 @@ class Structural1D:
         self.reac_forces2 = array([dot(self.K[i],self.Q)-self.F[i] for i in ind2[0]]) # Reaction forces at fixed ends
         
     def stress_strain(self):
+        '''
+        Defines the stress strain relationship using Hooke's Law and calculates stress and strain for each element.
+        '''
         self.strains = zeros(self.n_elements)
         self.stresses = zeros(self.n_elements)
         for i in range(self.n_elements):
-            self.strains[i] = (self.Q[i+1]-self.Q[i])/self.l[i]
-            self.stresses[i] = self.strains[i]*self.E[i]
+            if self.temperature_effect:
+                self.strains[i] = ((self.Q[i+1]-self.Q[i])/self.l[i]) - self.aplha[i]*self.delta_T
+                self.stresses[i] = self.strains[i]*self.E[i]
+            else:
+                self.strains[i] = (self.Q[i+1]-self.Q[i])/self.l[i]
+                self.stresses[i] = self.strains[i]*self.E[i]
     
     
     def solve(self, method):
@@ -124,13 +150,19 @@ if __name__ =="__main__":
     F = array([2000,1000])
     F_position = array([4,2]) # The node at which the Force is acting
     #################################
+    ####### Temperature effects #####
+    temperature_effect = True
+    alpha = 10**-6*array([12,20])    # Thermal expansion coefficient. Unit is per Deg Celsius
+    delta_T = 50 # deg Celsius
+    #################################
     #### Boundary conditions ########
     fixed_pos = 1
     node_with_displacement = False # node_with_displacement is an array - [value of displacement,position]
 
-    bar = Structural1D(E,A,l,n_elements)
+    bar = Structural1D(E,A,l,n_elements,temperature_effect)
     bar.find_stiffness_matrix()
-    bar.Force(F,F_position)    
+    bar.Force(F,F_position)
+    bar.temp_effects(alpha,delta_T)
     bar.boundary_conditions(fixed_pos,node_with_displacement)
     bar.solve(method)
     bar.print_func()
