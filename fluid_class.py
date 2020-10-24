@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 # This is the Fluid class used to solve Fluid FLow problems where the unknowns are the pressure heads in the system. 
 # The Pressure head boundary conditions are specified at the ends.
-# Assumued connectivity --- 1 -> 2 -> 3 ...... -> N.
+# Assumued element connectivity --- 1 -> 2 -> 3 ...... -> N.
 
 class FluidFlow:
     def __init__(self,K_p,A,l,n_elements,visualization):
