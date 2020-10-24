@@ -1,6 +1,11 @@
 from numpy import *
 import matplotlib.pyplot as plt
 
+# Forces accounted for - Heat flux, Heat generation, convective force from wall, convective forces from ends and specified flux at ends.
+# Boundary conditions - Temperature at ends, Insulated ends, Convective ends, flux at ends. Wall is either insulated or convective, depending on the heat transfer coefficient. If h = 0; walls are insulated. 
+# Assumued element connectivity --- 1 -> 2 -> 3 ...... -> N.
+
+
 class Thermal1D:
     def __init__(self,Kt,l,n_elements,h,A=False,Dia=False):
         self.n_elements = n_elements
