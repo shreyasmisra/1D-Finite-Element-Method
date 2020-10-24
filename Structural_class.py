@@ -1,5 +1,9 @@
 from numpy import *
 
+# Program is used for finding the unknowne stresses and strains in a system consisting of bar elements. It takes into consideration point and thermal forces.
+# The boundary conditions are fixed or a displacement is specified. 
+# Assumued connectivity --- 1 -> 2 -> 3 ...... -> N.
+
 class Structural1D:
     def __init__(self,E,A,l,n_elements,temperature_effect = False):
         self.E = E
